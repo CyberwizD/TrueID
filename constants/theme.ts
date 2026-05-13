@@ -1,53 +1,64 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    background: '#F4EFE7',
+    surface: '#FBF7F0',
+    surfaceMuted: '#EFE5D6',
+    text: '#201B17',
+    muted: '#6F665C',
+    accent: '#A35F35',
+    accentSoft: '#DDBB97',
+    line: '#D7CCBD',
+    success: '#2F6B45',
+    danger: '#A13E34',
+    tabIconDefault: '#8B7A68',
+    tabIconSelected: '#A35F35',
+    shadow: 'rgba(50, 33, 18, 0.08)',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    background: '#F4EFE7',
+    surface: '#FBF7F0',
+    surfaceMuted: '#EFE5D6',
+    text: '#201B17',
+    muted: '#6F665C',
+    accent: '#A35F35',
+    accentSoft: '#DDBB97',
+    line: '#D7CCBD',
+    success: '#2F6B45',
+    danger: '#A13E34',
+    tabIconDefault: '#8B7A68',
+    tabIconSelected: '#A35F35',
+    shadow: 'rgba(50, 33, 18, 0.08)',
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    display: 'Georgia',
+    body: 'Avenir Next',
+    mono: 'Menlo',
+  },
+  android: {
+    display: 'serif',
+    body: 'sans-serif',
+    mono: 'monospace',
   },
   default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
+    display: 'serif',
+    body: 'sans-serif',
     mono: 'monospace',
   },
   web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    display: "Iowan Old Style, Georgia, 'Times New Roman', serif",
+    body: "'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif",
+    mono: "'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace",
   },
 });
+
+export const Radii = {
+  sm: 12,
+  md: 20,
+  lg: 28,
+  pill: 999,
+};
