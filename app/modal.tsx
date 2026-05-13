@@ -1,29 +1,72 @@
-import { Link } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { ScreenShell } from '@/components/screen-shell';
+import { Colors, Fonts, Radii } from '@/constants/theme';
+import { privacyControls } from '@/data/mock-data';
 
 export default function ModalScreen() {
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">This is a modal</ThemedText>
-      <Link href="/" dismissTo style={styles.link}>
-        <ThemedText type="link">Go to home screen</ThemedText>
-      </Link>
-    </ThemedView>
+    <ScreenShell>
+      <View style={styles.panel}>
+        <Text style={styles.title}>Privacy promise</Text>
+        <Text style={styles.subtitle}>
+          TrueID should identify callers without turning into a surveillance product. These are the launch guardrails.
+        </Text>
+        <View style={styles.list}>
+          {privacyControls.map((item) => (
+            <View key={item} style={styles.row}>
+              <View style={styles.marker} />
+              <Text style={styles.body}>{item}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </ScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+  panel: {
+    marginTop: 12,
+    padding: 22,
+    borderRadius: Radii.lg,
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+    backgroundColor: Colors.light.surface,
+    gap: 16,
   },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
+  title: {
+    color: Colors.light.text,
+    fontFamily: Fonts.display,
+    fontSize: 32,
+    lineHeight: 36,
+  },
+  subtitle: {
+    color: Colors.light.muted,
+    fontFamily: Fonts.body,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  list: {
+    gap: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  marker: {
+    width: 8,
+    height: 8,
+    marginTop: 6,
+    borderRadius: Radii.pill,
+    backgroundColor: Colors.light.accent,
+  },
+  body: {
+    flex: 1,
+    color: Colors.light.text,
+    fontFamily: Fonts.body,
+    fontSize: 14,
+    lineHeight: 21,
   },
 });
