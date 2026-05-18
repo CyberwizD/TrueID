@@ -5,21 +5,54 @@ import { Reveal } from '@/components/reveal';
 import { ScreenShell } from '@/components/screen-shell';
 import { SectionHeading } from '@/components/section-heading';
 import { Colors, Fonts, Radii } from '@/constants/theme';
-import { callerDirectory } from '@/data/mock-data';
+import { getConfiguredApiBaseUrl, lookupCaller, type LookupResponse } from '@/lib/trueid-api';
 import { normalizePhoneNumber } from '@/lib/phone';
+import { previewNativeOverlay, syncNativeApiBaseUrl } from '@/lib/trueid-telecom';
 
 export default function LookupScreen() {
   const [query, setQuery] = useState('');
+  const [result, setResult] = useState<LookupResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const normalized = normalizePhoneNumber(query);
-  const result = callerDirectory.find((item) => item.phoneNumber === normalized);
+
+  async function handleLookup() {
+    if (!query.trim()) {
+      setError('Enter a phone number first.');
+      setResult(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await syncNativeApiBaseUrl();
+      const payload = await lookupCaller(query);
+      setResult(payload);
+    } catch (lookupError) {
+      setResult(null);
+      setError(lookupError instanceof Error ? lookupError.message : 'Lookup failed.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handlePreviewOverlay() {
+    if (!result) {
+      return;
+    }
+    await previewNativeOverlay(result);
+  }
 
   return (
     <ScreenShell>
       <Reveal delay={60}>
         <SectionHeading
           eyebrow="Manual lookup"
-          title="Search before the next ring."
-          detail="Use the same backend contract as the Android overlay, but in a screen that supports deliberate checking and reporting."
+          title="Search against the live backend."
+          detail="This screen posts directly to your FastAPI lookup route and can preview the Android caller overlay from the same response."
         />
       </Reveal>
 
@@ -37,10 +70,14 @@ export default function LookupScreen() {
           <Text style={styles.searchHint}>
             {normalized ? `Normalized as ${normalized}` : 'Nigeria-first normalization in E.164 format.'}
           </Text>
-          <Pressable style={styles.primaryAction}>
-            <Text style={styles.primaryActionText}>Lookup</Text>
+          <Pressable
+            style={[styles.primaryAction, loading && styles.primaryActionDisabled]}
+            onPress={handleLookup}
+            disabled={loading}>
+            <Text style={styles.primaryActionText}>{loading ? 'Looking up...' : 'Lookup'}</Text>
           </Pressable>
         </View>
+        <Text style={styles.endpointHint}>Live base URL: {getConfiguredApiBaseUrl()}</Text>
       </Reveal>
 
       <Reveal delay={180} style={styles.resultPanel}>
@@ -48,39 +85,59 @@ export default function LookupScreen() {
         {result ? (
           <>
             <View style={styles.resultTop}>
-              <View style={{ flex: 1, gap: 6 }}>
+              <View style={styles.resultColumn}>
                 <Text style={styles.resultName}>{result.name}</Text>
                 <Text style={styles.resultMeta}>{result.location}</Text>
-                <Text style={styles.resultMeta}>{result.phoneNumber}</Text>
+                <Text style={styles.resultMeta}>{result.phone_number}</Text>
               </View>
               <Text style={styles.resultConfidence}>{result.confidence}%</Text>
             </View>
             <Text style={styles.resultBadge}>{result.spam ? 'High spam risk' : 'Low spam risk'}</Text>
-            <Text style={styles.resultNote}>{result.notes}</Text>
+            <Text style={styles.resultNote}>
+              {result.verified
+                ? 'This match came from a verified caller profile.'
+                : 'This match was resolved from a known profile or crowdsourced contact consensus.'}
+            </Text>
+            <View style={styles.actionRow}>
+              <Pressable style={styles.primaryAction} onPress={handlePreviewOverlay}>
+                <Text style={styles.primaryActionText}>Preview Android overlay</Text>
+              </Pressable>
+            </View>
           </>
         ) : (
           <>
-            <Text style={styles.resultName}>Unknown caller</Text>
+            <Text style={styles.resultName}>No live result yet</Text>
             <Text style={styles.resultNote}>
-              No confident match yet. After the call, the user can report spam or contribute a safer label.
+              Run a lookup to verify the backend response and preview the same payload the Android service will show during an incoming call.
             </Text>
           </>
         )}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </Reveal>
 
       <Reveal delay={240} style={styles.sourcesPanel}>
         <Text style={styles.sectionTitle}>What backs this result</Text>
         <View style={styles.sourcesList}>
-          {(result?.sources ?? [
-            'No curated profile found',
-            'No crowd consensus found',
-            'Regional hint defaults to country until evidence improves',
-          ]).map((source) => (
-            <View key={source} style={styles.sourceRow}>
+          {(result?.sources ?? []).map((source) => (
+            <View key={`${source.source}-${source.label}`} style={styles.sourceRow}>
               <View style={styles.sourceMarker} />
-              <Text style={styles.sourceText}>{source}</Text>
+              <Text style={styles.sourceText}>
+                {source.label} · weight {source.weight}
+              </Text>
             </View>
           ))}
+          {!result?.sources.length ? (
+            <>
+              <View style={styles.sourceRow}>
+                <View style={styles.sourceMarker} />
+                <Text style={styles.sourceText}>No profile or crowd consensus loaded yet.</Text>
+              </View>
+              <View style={styles.sourceRow}>
+                <View style={styles.sourceMarker} />
+                <Text style={styles.sourceText}>Once the API responds, these source signals come from FastAPI directly.</Text>
+              </View>
+            </>
+          ) : null}
         </View>
       </Reveal>
     </ScreenShell>
@@ -128,11 +185,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  endpointHint: {
+    color: Colors.light.muted,
+    fontFamily: Fonts.mono,
+    fontSize: 12,
+  },
   primaryAction: {
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: Radii.pill,
     backgroundColor: Colors.light.accent,
+  },
+  primaryActionDisabled: {
+    opacity: 0.65,
   },
   primaryActionText: {
     color: '#FFF7EF',
@@ -159,6 +224,10 @@ const styles = StyleSheet.create({
   resultTop: {
     flexDirection: 'row',
     gap: 12,
+  },
+  resultColumn: {
+    flex: 1,
+    gap: 6,
   },
   resultName: {
     color: Colors.light.text,
@@ -192,6 +261,16 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.body,
     fontSize: 14,
     lineHeight: 21,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  errorText: {
+    color: Colors.light.danger,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
   },
   sourcesPanel: {
     padding: 20,
