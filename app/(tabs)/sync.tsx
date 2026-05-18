@@ -105,7 +105,7 @@ export default function SyncScreen() {
     <ScreenShell>
       <Reveal delay={50}>
         <SectionHeading
-          eyebrow="Contact sync"
+          eyebrow=""
           title="Contribute only when you approve it."
           detail="TrueID only needs contact names and numbers you explicitly allow. There is no account or profile flow here."
         />
