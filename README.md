@@ -1,50 +1,46 @@
-# Welcome to your Expo app 👋
+# TrueID Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+TrueID mobile is an Expo Router app for the Android-first caller identification experience.
 
-## Get started
+## What is implemented
 
-1. Install dependencies
+- Live FastAPI lookup from the `Lookup` screen
+- Native Android caller identification path using `CallScreeningService`
+- Translucent caller overlay activity that renders the lookup result during an incoming call
+- Settings screen for backend status and Android caller-ID role status
 
-   ```bash
-   npm install
-   ```
+## Important constraint
 
-2. Start the app
+This feature does **not** work in Expo Go. Use a development build because Android telecom APIs require custom native code.
 
-   ```bash
-   npx expo start
-   ```
+## Environment
 
-In the output, you'll find options to open the app in a
+Set the backend URL before building:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```env
+EXPO_PUBLIC_TRUEID_API_BASE_URL=http://10.0.2.2:8000
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+For a physical Android device, replace `10.0.2.2` with your machine's LAN IP.
 
-## Learn more
+## Local run
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm install
+npx expo prebuild --platform android
+npx expo run:android
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+If you already generated native files, you can keep using:
 
-## Join the community
+```bash
+npx expo start --dev-client
+```
 
-Join our community of developers creating universal apps.
+## Caller ID setup on Android
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Install the development build on an Android 10+ device or emulator.
+2. Open the `Settings` tab.
+3. Tap `Enable caller ID role`.
+4. Accept the Android role prompt.
+5. Use the `Lookup` screen to verify the backend and preview the overlay UI.
