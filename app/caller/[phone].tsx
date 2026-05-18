@@ -7,7 +7,7 @@ import { ScreenShell } from '@/components/screen-shell';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { lookupCaller, reportSpam, type LookupResponse, type SpamReason } from '@/lib/trueid-api';
 
-const QUICK_REASONS: Array<{ label: string; value: SpamReason }> = [
+const QUICK_REASONS: { label: string; value: SpamReason }[] = [
   { label: 'Scam', value: 'scam_fraud' },
   { label: 'Telemarketing', value: 'telemarketing' },
   { label: 'Loan spam', value: 'loan_spam' },
