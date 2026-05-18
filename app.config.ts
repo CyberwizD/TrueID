@@ -53,6 +53,9 @@ const config: ExpoConfig = {
     reactCompiler: true,
   },
   extra: {
+    eas: {
+      projectId: 'eef531fe-ef9d-4895-aaf0-28b5998e1627',
+    },
     trueIdApiBaseUrl: apiBaseUrl,
   },
 };
