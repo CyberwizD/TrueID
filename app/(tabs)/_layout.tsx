@@ -1,9 +1,9 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { Colors, Fonts } from '@/constants/theme';
 
 export default function TabLayout() {
   return (
@@ -15,13 +15,15 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: Colors.light.surface,
           borderTopColor: Colors.light.line,
-          height: 72,
+          height: 76,
           paddingTop: 10,
           paddingBottom: Platform.OS === 'ios' ? 10 : 12,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontSize: 11,
+          fontFamily: Fonts.body,
+          fontWeight: '700',
+          letterSpacing: 0.3,
         },
       }}>
       <Tabs.Screen
@@ -29,34 +31,34 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home-variant-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="shield-home-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="lookup"
         options={{
-          title: 'Lookup',
+          title: 'Search',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="phone-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="magnify" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="intel"
+        name="sync"
         options={{
-          title: 'Intel',
+          title: 'Sync',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="shield-alert-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="account-box-multiple-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: 'More',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="cog-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="dots-horizontal-circle-outline" size={size} color={color} />
           ),
         }}
       />
