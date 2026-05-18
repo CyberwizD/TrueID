@@ -38,7 +38,7 @@ export default function TabLayout() {
         options={{
           title: 'Lookup',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="phone-search-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="phone-outline" size={size} color={color} />
           ),
         }}
       />
