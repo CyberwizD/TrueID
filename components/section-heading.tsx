@@ -20,21 +20,21 @@ export function SectionHeading({ eyebrow, title, detail }: SectionHeadingProps) 
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: 4,
+    gap: 6,
   },
   eyebrow: {
     color: Colors.light.accent,
     fontFamily: Fonts.body,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1.3,
+    letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
     color: Colors.light.text,
     fontFamily: Fonts.display,
-    fontSize: 30,
-    lineHeight: 35,
+    fontSize: 32,
+    lineHeight: 38,
   },
   detail: {
     color: Colors.light.muted,
