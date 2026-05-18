@@ -1,24 +1,61 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Reveal } from '@/components/reveal';
 import { ScreenShell } from '@/components/screen-shell';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { callerDirectory } from '@/data/mock-data';
+import { lookupCaller, type LookupResponse } from '@/lib/trueid-api';
 
 export default function CallerDetailScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
-  const profile =
+  const requestedPhone = useMemo(() => decodeURIComponent(phone ?? ''), [phone]);
+  const fallbackProfile =
+    callerDirectory.find((item) => item.phoneNumber === requestedPhone) ??
     callerDirectory.find((item) => item.phoneNumber === phone) ??
-    callerDirectory.find((item) => item.phoneNumber === decodeURIComponent(phone ?? '')) ??
     null;
 
-  if (!profile) {
+  const [profile, setProfile] = useState<LookupResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProfile() {
+      if (!requestedPhone) {
+        return;
+      }
+
+      try {
+        const payload = await lookupCaller(requestedPhone);
+        if (isMounted) {
+          setProfile(payload);
+          setError(null);
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError(loadError instanceof Error ? loadError.message : 'Failed to load caller.');
+        }
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [requestedPhone]);
+
+  const effectiveProfile = profile ?? (fallbackProfile ? mapFallbackCaller(fallbackProfile) : null);
+
+  if (!effectiveProfile) {
     return (
       <ScreenShell>
         <Reveal delay={60} style={styles.emptyState}>
           <Text style={styles.title}>Caller not found</Text>
-          <Text style={styles.subtitle}>The selected number is not in the current mock directory.</Text>
+          <Text style={styles.subtitle}>No live caller record was returned for this number.</Text>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </Reveal>
       </ScreenShell>
     );
@@ -39,29 +76,36 @@ export default function CallerDetailScreen() {
         </View>
       }>
       <Reveal delay={60} style={styles.hero}>
-        <Text style={styles.eyebrow}>{profile.matchStrategy.replace('_', ' ')}</Text>
-        <Text style={styles.title}>{profile.name}</Text>
-        <Text style={styles.subtitle}>{profile.phoneNumber}</Text>
-        <Text style={styles.subtitle}>{profile.location}</Text>
+        <Text style={styles.eyebrow}>{effectiveProfile.match_strategy.replace('_', ' ')}</Text>
+        <Text style={styles.title}>{effectiveProfile.name}</Text>
+        <Text style={styles.subtitle}>{effectiveProfile.phone_number}</Text>
+        <Text style={styles.subtitle}>{effectiveProfile.location}</Text>
         <View style={styles.metaRow}>
-          <Text style={[styles.badge, profile.spam ? styles.spamBadge : styles.safeBadge]}>
-            {profile.spam ? 'Spam risk' : 'Low risk'}
+          <Text style={[styles.badge, effectiveProfile.spam ? styles.spamBadge : styles.safeBadge]}>
+            {effectiveProfile.spam ? 'Spam risk' : 'Low risk'}
           </Text>
-          <Text style={styles.score}>{profile.confidence}% confidence</Text>
+          <Text style={styles.score}>{effectiveProfile.confidence}% confidence</Text>
         </View>
       </Reveal>
 
       <Reveal delay={120} style={styles.panel}>
         <Text style={styles.panelTitle}>Why this identity appears</Text>
-        <Text style={styles.body}>{profile.notes}</Text>
+        <Text style={styles.body}>
+          {effectiveProfile.verified
+            ? 'This number resolved through a verified profile.'
+            : 'This number resolved through a known profile or crowdsourced consensus.'}
+        </Text>
         <View style={styles.list}>
-          {profile.sources.map((item) => (
-            <View key={item} style={styles.listRow}>
+          {effectiveProfile.sources.map((item) => (
+            <View key={`${item.source}-${item.label}`} style={styles.listRow}>
               <View style={styles.marker} />
-              <Text style={styles.body}>{item}</Text>
+              <Text style={styles.body}>
+                {item.label} · weight {item.weight}
+              </Text>
             </View>
           ))}
         </View>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </Reveal>
 
       <Reveal delay={180} style={styles.actionRow}>
@@ -74,6 +118,30 @@ export default function CallerDetailScreen() {
       </Reveal>
     </ScreenShell>
   );
+}
+
+function mapFallbackCaller(caller: (typeof callerDirectory)[number]): LookupResponse {
+  return {
+    phone_number: caller.phoneNumber,
+    name: caller.name,
+    location: caller.location,
+    spam: caller.spam,
+    confidence: caller.confidence,
+    spam_score: caller.spamScore,
+    caller_type:
+      caller.callerType === 'Business'
+        ? 'business'
+        : caller.callerType === 'Personal'
+          ? 'individual'
+          : 'unknown',
+    verified: caller.verified,
+    match_strategy: caller.matchStrategy,
+    sources: caller.sources.map((label) => ({
+      source: 'profile' as const,
+      weight: 20,
+      label,
+    })),
+  };
 }
 
 const styles = StyleSheet.create({
@@ -223,5 +291,11 @@ const styles = StyleSheet.create({
   emptyState: {
     paddingTop: 60,
     gap: 10,
+  },
+  errorText: {
+    color: Colors.light.danger,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });
