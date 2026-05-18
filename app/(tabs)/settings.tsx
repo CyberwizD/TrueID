@@ -44,7 +44,7 @@ export default function SettingsScreen() {
     <ScreenShell>
       <Reveal delay={50}>
         <SectionHeading
-          eyebrow="More"
+          eyebrow=""
           title="Keep the app ready."
           detail="This is the only place where operational details belong. The main flow stays clean."
         />
