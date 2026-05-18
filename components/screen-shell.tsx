@@ -15,6 +15,7 @@ export function ScreenShell({ children, header }: ScreenShellProps) {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
+        <View style={styles.glowTop} />
         {header ? <View style={styles.header}>{header}</View> : null}
         {children}
       </ScrollView>
@@ -35,6 +36,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
     gap: 18,
+  },
+  glowTop: {
+    position: 'absolute',
+    top: -120,
+    right: -40,
+    width: 240,
+    height: 240,
+    borderRadius: 999,
+    backgroundColor: 'rgba(199, 166, 106, 0.09)',
   },
   header: {
     paddingTop: 8,
