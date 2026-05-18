@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+import { TrueIdProvider } from '@/components/trueid-provider';
 import { Colors } from '@/constants/theme';
 
 export const unstable_settings = {
@@ -25,13 +26,15 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={theme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="caller/[phone]" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Privacy Promise' }} />
-      </Stack>
-      <StatusBar style="dark" />
-    </ThemeProvider>
+    <TrueIdProvider>
+      <ThemeProvider value={theme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="caller/[phone]" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Privacy Promise' }} />
+        </Stack>
+        <StatusBar style="light" />
+      </ThemeProvider>
+    </TrueIdProvider>
   );
 }
