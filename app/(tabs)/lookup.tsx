@@ -9,7 +9,7 @@ import { Colors, Fonts, Radii } from '@/constants/theme';
 import { lookupCaller, reportSpam, type LookupResponse, type SpamReason } from '@/lib/trueid-api';
 import { previewNativeOverlay, syncNativeApiBaseUrl } from '@/lib/trueid-telecom';
 
-const SPAM_REASONS: Array<{ label: string; value: SpamReason }> = [
+const SPAM_REASONS: { label: string; value: SpamReason }[] = [
   { label: 'Scam', value: 'scam_fraud' },
   { label: 'Telemarketing', value: 'telemarketing' },
   { label: 'Harassment', value: 'harassment' },
@@ -66,7 +66,7 @@ export default function LookupScreen() {
     <ScreenShell>
       <Reveal delay={50}>
         <SectionHeading
-          eyebrow="Live search"
+          eyebrow=""
           title="Search any number."
           detail="One focused action. Type a number, get the identity, and flag it if it looks unsafe."
         />
