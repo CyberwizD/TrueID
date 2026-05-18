@@ -27,6 +27,27 @@ export type HealthResponse = {
   backend: 'memory' | 'supabase';
 };
 
+export type SpamReason =
+  | 'scam_fraud'
+  | 'telemarketing'
+  | 'harassment'
+  | 'loan_spam'
+  | 'robocall'
+  | 'unknown_threat';
+
+export type ContactContributionInput = {
+  phone_number: string;
+  contact_name: string;
+  source_city?: string;
+  source_state?: string;
+};
+
+export type UploadContactsResponse = {
+  uploaded: number;
+  unique_numbers: number;
+  ignored_duplicates: number;
+};
+
 type ExpoExtra = {
   trueIdApiBaseUrl?: string;
 };
@@ -70,6 +91,39 @@ export async function lookupCaller(phoneNumber: string): Promise<LookupResponse>
 export async function fetchApiHealth(): Promise<HealthResponse> {
   const response = await fetch(buildApiUrl('/health'));
   return readJsonResponse<HealthResponse>(response);
+}
+
+export async function uploadContacts(
+  userId: string,
+  contacts: ContactContributionInput[],
+): Promise<UploadContactsResponse> {
+  const response = await fetch(buildApiUrl('/api/v1/upload-contacts'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      contacts,
+    }),
+  });
+
+  return readJsonResponse<UploadContactsResponse>(response);
+}
+
+export async function reportSpam(phoneNumber: string, reason: SpamReason): Promise<void> {
+  const response = await fetch(buildApiUrl('/api/v1/report-spam'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      phone_number: normalizePhoneNumber(phoneNumber) || phoneNumber,
+      reason,
+    }),
+  });
+
+  await readJsonResponse(response);
 }
 
 export function getConfiguredApiBaseUrl(): string {
