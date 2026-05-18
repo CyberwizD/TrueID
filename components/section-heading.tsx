@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { Colors, Fonts } from '@/constants/theme';
 
@@ -20,26 +20,27 @@ export function SectionHeading({ eyebrow, title, detail }: SectionHeadingProps) 
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: 6,
+    gap: 8,
   },
   eyebrow: {
     color: Colors.light.accent,
     fontFamily: Fonts.body,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    letterSpacing: 1.6,
+    letterSpacing: 1.8,
     textTransform: 'uppercase',
   },
   title: {
     color: Colors.light.text,
     fontFamily: Fonts.display,
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 35,
+    lineHeight: Platform.OS === 'android' ? 50 : 46,
+    paddingTop: Platform.OS === 'android' ? 3 : 20,
   },
   detail: {
     color: Colors.light.muted,
     fontFamily: Fonts.body,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 24,
   },
 });
