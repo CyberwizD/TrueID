@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
+import { requireNativeModule } from 'expo';
 
-import TrueIdTelecomModule from '@/modules';
 import { getConfiguredApiBaseUrl, type LookupResponse } from '@/lib/trueid-api';
 
 export type NativeTelecomStatus = {
@@ -11,16 +11,52 @@ export type NativeTelecomStatus = {
   nativeAvailable: boolean;
 };
 
-export async function syncNativeApiBaseUrl(): Promise<void> {
+type TrueIdTelecomModuleShape = {
+  setApiBaseUrlAsync(apiBaseUrl: string): Promise<void>;
+  getStatusAsync(): Promise<NativeTelecomStatus>;
+  openCallScreeningRoleRequestAsync(): Promise<void>;
+  showCallerOverlayAsync(
+    phoneNumber: string,
+    name: string,
+    location: string,
+    spam: boolean,
+    confidence: number,
+    spamScore: number
+  ): Promise<void>;
+};
+
+let cachedModule: TrueIdTelecomModuleShape | null | undefined;
+
+function getNativeModule(): TrueIdTelecomModuleShape | null {
   if (Platform.OS !== 'android') {
+    return null;
+  }
+
+  if (cachedModule !== undefined) {
+    return cachedModule;
+  }
+
+  try {
+    cachedModule = requireNativeModule<TrueIdTelecomModuleShape>('TrueIdTelecom');
+  } catch {
+    cachedModule = null;
+  }
+
+  return cachedModule;
+}
+
+export async function syncNativeApiBaseUrl(): Promise<void> {
+  const nativeModule = getNativeModule();
+  if (!nativeModule) {
     return;
   }
 
-  await TrueIdTelecomModule.setApiBaseUrlAsync(getConfiguredApiBaseUrl());
+  await nativeModule.setApiBaseUrlAsync(getConfiguredApiBaseUrl());
 }
 
 export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
-  if (Platform.OS !== 'android') {
+  const nativeModule = getNativeModule();
+  if (!nativeModule) {
     return {
       platform: Platform.OS,
       apiBaseUrl: null,
@@ -30,23 +66,25 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
     };
   }
 
-  return TrueIdTelecomModule.getStatusAsync();
+  return nativeModule.getStatusAsync();
 }
 
 export async function openCallScreeningRoleRequest(): Promise<void> {
-  if (Platform.OS !== 'android') {
+  const nativeModule = getNativeModule();
+  if (!nativeModule) {
     return;
   }
 
-  await TrueIdTelecomModule.openCallScreeningRoleRequestAsync();
+  await nativeModule.openCallScreeningRoleRequestAsync();
 }
 
 export async function previewNativeOverlay(result: LookupResponse): Promise<void> {
-  if (Platform.OS !== 'android') {
+  const nativeModule = getNativeModule();
+  if (!nativeModule) {
     return;
   }
 
-  await TrueIdTelecomModule.showCallerOverlayAsync(
+  await nativeModule.showCallerOverlayAsync(
     result.phone_number,
     result.name,
     result.location,
