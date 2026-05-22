@@ -7,6 +7,7 @@ import {
   saveSyncSnapshot,
   type SyncSnapshot,
 } from '@/lib/installation';
+import { syncNativeApiBaseUrl } from '@/lib/trueid-telecom';
 import type { LookupResponse } from '@/lib/trueid-api';
 
 type TrueIdContextValue = {
@@ -31,7 +32,11 @@ export function TrueIdProvider({ children }: PropsWithChildren) {
     let active = true;
 
     async function bootstrap() {
-      const [lookups, snapshot] = await Promise.all([loadRecentLookups(), loadSyncSnapshot()]);
+      const [lookups, snapshot] = await Promise.all([
+        loadRecentLookups(),
+        loadSyncSnapshot(),
+        syncNativeApiBaseUrl().catch(() => undefined),
+      ]);
       if (!active) {
         return;
       }
