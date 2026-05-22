@@ -40,8 +40,9 @@ export default function SyncScreen() {
         fields: [Contacts.Fields.PhoneNumbers],
         pageSize: 5000,
       });
-      const count = response.data.filter((contact) => (contact.phoneNumbers?.length ?? 0) > 0).length;
-      setPhoneContactCount(count);
+      setPhoneContactCount(buildPreparedContacts(response.data).length);
+    } else {
+      setPhoneContactCount(0);
     }
   }
 
@@ -67,24 +68,7 @@ export default function SyncScreen() {
         fields: [Contacts.Fields.PhoneNumbers],
         pageSize: 5000,
       });
-      const preparedContacts = response.data
-        .flatMap((contact) => {
-          const name = contact.name?.trim();
-          const phone = contact.phoneNumbers?.[0]?.number;
-          const normalized = phone ? normalizePhoneNumber(phone) : '';
-
-          if (!name || normalized.length < 11) {
-            return [];
-          }
-
-          return [
-            {
-              phone_number: normalized,
-              contact_name: name,
-            },
-          ];
-        })
-        .slice(0, 1000);
+      const preparedContacts = buildPreparedContacts(response.data);
 
       const installationId = await getInstallationId();
       await uploadContacts(installationId, preparedContacts);
@@ -152,7 +136,7 @@ export default function SyncScreen() {
 
       <Reveal delay={200} style={styles.privacyPanel}>
         <Text style={styles.panelTitle}>What leaves the device</Text>
-        <Text style={styles.privacyLine}>Contact name and phone number only.</Text>
+        <Text style={styles.privacyLine}>Contact name and every saved phone number.</Text>
         <Text style={styles.privacyLine}>No account signup, no profile page, no exact home address exposure.</Text>
         <Text style={styles.privacyLine}>You stay in control of when sync happens.</Text>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -249,3 +233,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 });
+
+function buildPreparedContacts(contacts: Contacts.Contact[]): {
+  phone_number: string;
+  contact_name: string;
+  source_city?: string;
+  source_state?: string;
+}[] {
+  const seen = new Set<string>();
+
+  return contacts
+    .flatMap((contact) => {
+      const name = contact.name?.trim();
+      if (!name) {
+        return [];
+      }
+
+      return (contact.phoneNumbers ?? []).flatMap((phoneEntry) => {
+        const normalized = phoneEntry.number ? normalizePhoneNumber(phoneEntry.number) : '';
+        if (normalized.length < 11) {
+          return [];
+        }
+
+        const dedupeKey = `${normalized}:${name.toLocaleLowerCase()}`;
+        if (seen.has(dedupeKey)) {
+          return [];
+        }
+        seen.add(dedupeKey);
+
+        return [
+          {
+            phone_number: normalized,
+            contact_name: name,
+          },
+        ];
+      });
+    })
+    .slice(0, 1000);
+}
