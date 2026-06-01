@@ -14,9 +14,11 @@ class TrueIdTelecomModule extends NativeModule<TrueIdTelecomModuleEvents> {
   async getStatusAsync(): Promise<TrueIdTelecomStatus> {
     return {
       platform: 'web',
+      sdkInt: undefined,
       apiBaseUrl: null,
       backendConfigured: false,
       callScreeningRoleHeld: false,
+      callScreeningRoleAvailable: false,
       nativeAvailable: false,
     };
   }
