@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Reveal } from '@/components/reveal';
 import { ScreenShell } from '@/components/screen-shell';
@@ -29,6 +29,18 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     void refresh();
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        void refresh();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   async function enableRole() {
@@ -62,6 +74,20 @@ export default function SettingsScreen() {
           <Text style={[styles.statusValue, nativeStatus?.callScreeningRoleHeld ? styles.online : styles.pending]}>
             {nativeStatus?.callScreeningRoleHeld ? 'enabled' : 'not enabled'}
           </Text>
+        </View>
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>Role support</Text>
+          <Text
+            style={[
+              styles.statusValue,
+              nativeStatus?.callScreeningRoleAvailable ? styles.online : styles.offline,
+            ]}>
+            {nativeStatus?.callScreeningRoleAvailable ? 'available' : 'unavailable'}
+          </Text>
+        </View>
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>Android SDK</Text>
+          <Text style={styles.statusValue}>{nativeStatus?.sdkInt ?? 'unknown'}</Text>
         </View>
         <Pressable style={styles.primaryButton} onPress={() => void enableRole()}>
           <Text style={styles.primaryButtonText}>Enable caller ID on Android</Text>
