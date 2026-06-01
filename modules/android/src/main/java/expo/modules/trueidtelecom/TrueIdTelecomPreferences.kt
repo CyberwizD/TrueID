@@ -39,4 +39,12 @@ object TrueIdTelecomPreferences {
     val roleManager = context.getSystemService(RoleManager::class.java)
     return roleManager?.isRoleHeld(RoleManager.ROLE_CALL_SCREENING) == true
   }
+
+  fun isCallScreeningRoleAvailable(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+      return false
+    }
+    val roleManager = context.getSystemService(RoleManager::class.java)
+    return roleManager?.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING) == true
+  }
 }
