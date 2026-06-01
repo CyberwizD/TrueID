@@ -15,9 +15,11 @@ export type CallerOverlayPreviewPayload = {
 
 export type TrueIdTelecomStatus = {
   platform: string;
+  sdkInt?: number;
   apiBaseUrl: string | null;
   backendConfigured: boolean;
   callScreeningRoleHeld: boolean;
+  callScreeningRoleAvailable?: boolean;
   nativeAvailable: boolean;
 };
 
