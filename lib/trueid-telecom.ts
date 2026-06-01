@@ -5,9 +5,11 @@ import { getConfiguredApiBaseUrl, type LookupResponse } from '@/lib/trueid-api';
 
 export type NativeTelecomStatus = {
   platform: string;
+  sdkInt?: number;
   apiBaseUrl: string | null;
   backendConfigured: boolean;
   callScreeningRoleHeld: boolean;
+  callScreeningRoleAvailable?: boolean;
   nativeAvailable: boolean;
 };
 
@@ -59,9 +61,11 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
   if (!nativeModule) {
     return {
       platform: Platform.OS,
+      sdkInt: undefined,
       apiBaseUrl: null,
       backendConfigured: false,
       callScreeningRoleHeld: false,
+      callScreeningRoleAvailable: false,
       nativeAvailable: false,
     };
   }
