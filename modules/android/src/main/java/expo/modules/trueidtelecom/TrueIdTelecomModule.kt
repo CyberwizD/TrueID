@@ -21,9 +21,11 @@ class TrueIdTelecomModule : Module() {
       val context = appContext.reactContext ?: throw IllegalStateException("React context unavailable.")
       mapOf(
         "platform" to "android",
+        "sdkInt" to Build.VERSION.SDK_INT,
         "apiBaseUrl" to TrueIdTelecomPreferences.getApiBaseUrl(context),
         "backendConfigured" to !TrueIdTelecomPreferences.getApiBaseUrl(context).isNullOrBlank(),
         "callScreeningRoleHeld" to TrueIdTelecomPreferences.hasCallScreeningRole(context),
+        "callScreeningRoleAvailable" to TrueIdTelecomPreferences.isCallScreeningRoleAvailable(context),
         "nativeAvailable" to true,
       )
     }
@@ -36,8 +38,11 @@ class TrueIdTelecomModule : Module() {
       }
 
       val roleManager = activity.getSystemService(RoleManager::class.java)
+      if (roleManager?.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING) != true) {
+        throw IllegalStateException("Call screening role is not available on this device.")
+      }
       val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
-      activity.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+      activity.startActivity(intent)
     }
 
     AsyncFunction("showCallerOverlayAsync") {
