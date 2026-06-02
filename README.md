@@ -37,6 +37,12 @@ If you already generated native files, you can keep using:
 npx expo start --dev-client
 ```
 
+If you want to use your local IPv4 address as the hostname, when running the app:
+
+```bash
+REACT_NATIVE_PACKAGER_HOSTNAME=192.168.x.x npx expo start
+```
+
 ## Caller ID setup on Android
 
 1. Install the development build on an Android 10+ device or emulator.
