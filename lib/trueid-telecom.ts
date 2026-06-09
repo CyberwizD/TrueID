@@ -10,12 +10,14 @@ export type NativeTelecomStatus = {
   backendConfigured: boolean;
   callScreeningRoleHeld: boolean;
   callScreeningRoleAvailable?: boolean;
+  canDrawOverlays?: boolean;
   nativeAvailable: boolean;
 };
 
 type TrueIdTelecomModuleShape = {
   setApiBaseUrlAsync(apiBaseUrl: string): Promise<void>;
   getStatusAsync(): Promise<NativeTelecomStatus>;
+  requestOverlayPermissionAsync(): Promise<void>;
   openCallScreeningRoleRequestAsync(): Promise<void>;
   showCallerOverlayAsync(
     phoneNumber: string,
@@ -66,6 +68,7 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
       backendConfigured: false,
       callScreeningRoleHeld: false,
       callScreeningRoleAvailable: false,
+      canDrawOverlays: false,
       nativeAvailable: false,
     };
   }
@@ -80,6 +83,15 @@ export async function openCallScreeningRoleRequest(): Promise<void> {
   }
 
   await nativeModule.openCallScreeningRoleRequestAsync();
+}
+
+export async function requestOverlayPermission(): Promise<void> {
+  const nativeModule = getNativeModule();
+  if (!nativeModule) {
+    return;
+  }
+
+  await nativeModule.requestOverlayPermissionAsync();
 }
 
 export async function previewNativeOverlay(result: LookupResponse): Promise<void> {
