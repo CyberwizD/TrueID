@@ -6,7 +6,7 @@ import { ScreenShell } from '@/components/screen-shell';
 import { SectionHeading } from '@/components/section-heading';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { fetchApiHealth } from '@/lib/trueid-api';
-import { getNativeTelecomStatus, openCallScreeningRoleRequest, type NativeTelecomStatus } from '@/lib/trueid-telecom';
+import { getNativeTelecomStatus, openCallScreeningRoleRequest, requestOverlayPermission, type NativeTelecomStatus } from '@/lib/trueid-telecom';
 
 export default function SettingsScreen() {
   const [nativeStatus, setNativeStatus] = useState<NativeTelecomStatus | null>(null);
@@ -48,7 +48,23 @@ export default function SettingsScreen() {
       await openCallScreeningRoleRequest();
       await refresh();
     } catch (roleError) {
-      setError(roleError instanceof Error ? roleError.message : 'Role request failed.');
+      const msg = roleError instanceof Error ? roleError.message : 'Role request failed.';
+      if (msg.includes('restricted by the manufacturer')) {
+        setError('Call screening is blocked by your device manufacturer. This phone does not support the feature.');
+      } else if (msg.includes('Android 10 or newer')) {
+        setError('Your device is too old. Call screening requires Android 10 or newer.');
+      } else {
+        setError(msg);
+      }
+    }
+  }
+
+  async function enableOverlay() {
+    try {
+      await requestOverlayPermission();
+      await refresh();
+    } catch (overlayError) {
+      setError(overlayError instanceof Error ? overlayError.message : 'Overlay request failed.');
     }
   }
 
@@ -86,12 +102,29 @@ export default function SettingsScreen() {
           </Text>
         </View>
         <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>Overlay permission</Text>
+          <Text
+            style={[
+              styles.statusValue,
+              nativeStatus?.canDrawOverlays ? styles.online : styles.pending,
+            ]}>
+            {nativeStatus?.canDrawOverlays ? 'granted' : 'not granted'}
+          </Text>
+        </View>
+        <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>Android SDK</Text>
           <Text style={styles.statusValue}>{nativeStatus?.sdkInt ?? 'unknown'}</Text>
         </View>
-        <Pressable style={styles.primaryButton} onPress={() => void enableRole()}>
-          <Text style={styles.primaryButtonText}>Enable caller ID on Android</Text>
-        </Pressable>
+        {(!nativeStatus?.callScreeningRoleHeld || !nativeStatus?.canDrawOverlays) ? (
+          <Pressable style={styles.primaryButton} onPress={() => {
+            if (!nativeStatus?.callScreeningRoleHeld) void enableRole();
+            else void enableOverlay();
+          }}>
+            <Text style={styles.primaryButtonText}>
+              {!nativeStatus?.callScreeningRoleHeld ? 'Enable caller ID on Android' : 'Grant overlay permission'}
+            </Text>
+          </Pressable>
+        ) : null}
         <Pressable style={styles.secondaryButton} onPress={() => void refresh()}>
           <Text style={styles.secondaryButtonText}>Refresh status</Text>
         </Pressable>
