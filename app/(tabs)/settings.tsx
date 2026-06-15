@@ -6,7 +6,7 @@ import { ScreenShell } from '@/components/screen-shell';
 import { SectionHeading } from '@/components/section-heading';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { fetchApiHealth } from '@/lib/trueid-api';
-import { getNativeTelecomStatus, requestPhoneStatePermission, requestOverlayPermission, type NativeTelecomStatus } from '@/lib/trueid-telecom';
+import { getNativeTelecomStatus, requestPhoneStatePermission, requestCallLogPermission, requestOverlayPermission, type NativeTelecomStatus } from '@/lib/trueid-telecom';
 
 export default function SettingsScreen() {
   const [nativeStatus, setNativeStatus] = useState<NativeTelecomStatus | null>(null);
@@ -52,6 +52,15 @@ export default function SettingsScreen() {
     }
   }
 
+  async function enableCallLog() {
+    try {
+      await requestCallLogPermission();
+      await refresh();
+    } catch (permError) {
+      setError(permError instanceof Error ? permError.message : 'Call log permission request failed.');
+    }
+  }
+
   async function enableOverlay() {
     try {
       await requestOverlayPermission();
@@ -80,8 +89,14 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>Phone state permission</Text>
-          <Text style={[styles.statusValue, nativeStatus?.phoneStatePermissionGranted ? styles.online : styles.pending]}>
-            {nativeStatus?.phoneStatePermissionGranted ? 'granted' : 'not granted'}
+          <Text style={[styles.statusValue, nativeStatus?.phoneStateGranted ? styles.online : styles.pending]}>
+            {nativeStatus?.phoneStateGranted ? 'granted' : 'not granted'}
+          </Text>
+        </View>
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>Call log permission</Text>
+          <Text style={[styles.statusValue, nativeStatus?.callLogGranted ? styles.online : styles.pending]}>
+            {nativeStatus?.callLogGranted ? 'granted' : 'not granted'}
           </Text>
         </View>
         <View style={styles.statusRow}>
@@ -98,13 +113,16 @@ export default function SettingsScreen() {
           <Text style={styles.statusLabel}>Android SDK</Text>
           <Text style={styles.statusValue}>{nativeStatus?.sdkInt ?? 'unknown'}</Text>
         </View>
-        {(!nativeStatus?.phoneStatePermissionGranted || !nativeStatus?.canDrawOverlays) ? (
+        {(!nativeStatus?.phoneStateGranted || !nativeStatus?.callLogGranted || !nativeStatus?.canDrawOverlays) ? (
           <Pressable style={styles.primaryButton} onPress={() => {
-            if (!nativeStatus?.phoneStatePermissionGranted) void enablePhoneState();
+            if (!nativeStatus?.phoneStateGranted) void enablePhoneState();
+            else if (!nativeStatus?.callLogGranted) void enableCallLog();
             else void enableOverlay();
           }}>
             <Text style={styles.primaryButtonText}>
-              {!nativeStatus?.phoneStatePermissionGranted ? 'Grant phone permission' : 'Grant overlay permission'}
+              {!nativeStatus?.phoneStateGranted ? 'Grant phone state permission' : 
+               !nativeStatus?.callLogGranted ? 'Grant call log permission' : 
+               'Grant overlay permission'}
             </Text>
           </Pressable>
         ) : null}
