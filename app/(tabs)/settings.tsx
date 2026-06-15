@@ -6,7 +6,7 @@ import { ScreenShell } from '@/components/screen-shell';
 import { SectionHeading } from '@/components/section-heading';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { fetchApiHealth } from '@/lib/trueid-api';
-import { getNativeTelecomStatus, openCallScreeningRoleRequest, requestOverlayPermission, type NativeTelecomStatus } from '@/lib/trueid-telecom';
+import { getNativeTelecomStatus, requestPhoneStatePermission, requestOverlayPermission, type NativeTelecomStatus } from '@/lib/trueid-telecom';
 
 export default function SettingsScreen() {
   const [nativeStatus, setNativeStatus] = useState<NativeTelecomStatus | null>(null);
@@ -43,19 +43,12 @@ export default function SettingsScreen() {
     };
   }, []);
 
-  async function enableRole() {
+  async function enablePhoneState() {
     try {
-      await openCallScreeningRoleRequest();
+      await requestPhoneStatePermission();
       await refresh();
-    } catch (roleError) {
-      const msg = roleError instanceof Error ? roleError.message : 'Role request failed.';
-      if (msg.includes('restricted by the manufacturer')) {
-        setError('Call screening is blocked by your device manufacturer. This phone does not support the feature.');
-      } else if (msg.includes('Android 10 or newer')) {
-        setError('Your device is too old. Call screening requires Android 10 or newer.');
-      } else {
-        setError(msg);
-      }
+    } catch (permError) {
+      setError(permError instanceof Error ? permError.message : 'Phone state permission request failed.');
     }
   }
 
@@ -86,19 +79,9 @@ export default function SettingsScreen() {
           </Text>
         </View>
         <View style={styles.statusRow}>
-          <Text style={styles.statusLabel}>Caller ID role</Text>
-          <Text style={[styles.statusValue, nativeStatus?.callScreeningRoleHeld ? styles.online : styles.pending]}>
-            {nativeStatus?.callScreeningRoleHeld ? 'enabled' : 'not enabled'}
-          </Text>
-        </View>
-        <View style={styles.statusRow}>
-          <Text style={styles.statusLabel}>Role support</Text>
-          <Text
-            style={[
-              styles.statusValue,
-              nativeStatus?.callScreeningRoleAvailable ? styles.online : styles.offline,
-            ]}>
-            {nativeStatus?.callScreeningRoleAvailable ? 'available' : 'unavailable'}
+          <Text style={styles.statusLabel}>Phone state permission</Text>
+          <Text style={[styles.statusValue, nativeStatus?.phoneStatePermissionGranted ? styles.online : styles.pending]}>
+            {nativeStatus?.phoneStatePermissionGranted ? 'granted' : 'not granted'}
           </Text>
         </View>
         <View style={styles.statusRow}>
@@ -115,13 +98,13 @@ export default function SettingsScreen() {
           <Text style={styles.statusLabel}>Android SDK</Text>
           <Text style={styles.statusValue}>{nativeStatus?.sdkInt ?? 'unknown'}</Text>
         </View>
-        {(!nativeStatus?.callScreeningRoleHeld || !nativeStatus?.canDrawOverlays) ? (
+        {(!nativeStatus?.phoneStatePermissionGranted || !nativeStatus?.canDrawOverlays) ? (
           <Pressable style={styles.primaryButton} onPress={() => {
-            if (!nativeStatus?.callScreeningRoleHeld) void enableRole();
+            if (!nativeStatus?.phoneStatePermissionGranted) void enablePhoneState();
             else void enableOverlay();
           }}>
             <Text style={styles.primaryButtonText}>
-              {!nativeStatus?.callScreeningRoleHeld ? 'Enable caller ID on Android' : 'Grant overlay permission'}
+              {!nativeStatus?.phoneStatePermissionGranted ? 'Grant phone permission' : 'Grant overlay permission'}
             </Text>
           </Pressable>
         ) : null}
