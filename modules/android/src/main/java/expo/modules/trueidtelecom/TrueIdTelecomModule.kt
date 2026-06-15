@@ -27,6 +27,7 @@ class TrueIdTelecomModule : Module() {
         "backendConfigured" to !TrueIdTelecomPreferences.getApiBaseUrl(context).isNullOrBlank(),
         "phoneStateGranted" to TrueIdTelecomPreferences.hasPhoneStatePermission(context),
         "callLogGranted" to TrueIdTelecomPreferences.hasCallLogPermission(context),
+        "answerPhoneCallsGranted" to TrueIdTelecomPreferences.hasAnswerPhoneCallsPermission(context),
         "canDrawOverlays" to if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true,
         "nativeAvailable" to true,
       )

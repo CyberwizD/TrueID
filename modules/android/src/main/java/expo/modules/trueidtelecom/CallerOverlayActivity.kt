@@ -1,40 +1,63 @@
 package expo.modules.trueidtelecom
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.telecom.TelecomManager
+import android.telephony.TelephonyManager
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 
 class CallerOverlayActivity : Activity() {
+
+  private val callStateReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+      if (intent?.action == TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
+        val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+        if (state == TelephonyManager.EXTRA_STATE_IDLE || state == TelephonyManager.EXTRA_STATE_OFFHOOK) {
+          finish()
+        }
+      }
+    }
+  }
+
+  @SuppressLint("UnspecifiedRegisterReceiverFlag")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
       setShowWhenLocked(true)
+      setTurnScreenOn(true)
     } else {
       @Suppress("DEPRECATION")
-      window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+      window.addFlags(
+        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+      )
     }
+
+    // Keep screen on
+    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
     window.setGravity(Gravity.TOP)
     window.attributes = window.attributes.apply {
       width = WindowManager.LayoutParams.MATCH_PARENT
-      height = WindowManager.LayoutParams.WRAP_CONTENT
-      y = 36
+      height = WindowManager.LayoutParams.MATCH_PARENT
     }
-    setFinishOnTouchOutside(true)
+    setFinishOnTouchOutside(false)
 
     val payload = readPayload(intent) ?: run {
       finish()
@@ -42,12 +65,23 @@ class CallerOverlayActivity : Activity() {
     }
 
     val container = FrameLayout(this).apply {
-      setBackgroundColor(Color.TRANSPARENT)
+      setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent black background
+      layoutParams = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.MATCH_PARENT,
+        FrameLayout.LayoutParams.MATCH_PARENT,
+      )
+      setPadding(24, 120, 24, 120)
+    }
+
+    val contentLayout = LinearLayout(this).apply {
+      orientation = LinearLayout.VERTICAL
+      gravity = Gravity.CENTER_HORIZONTAL
       layoutParams = FrameLayout.LayoutParams(
         FrameLayout.LayoutParams.MATCH_PARENT,
         FrameLayout.LayoutParams.WRAP_CONTENT,
-      )
-      setPadding(24, 40, 24, 0)
+      ).apply {
+        gravity = Gravity.CENTER
+      }
     }
 
     val card = LinearLayout(this).apply {
@@ -59,23 +93,119 @@ class CallerOverlayActivity : Activity() {
         setStroke(2, Color.parseColor("#D7CCBD"))
       }
       elevation = 16f
-      setPadding(36, 32, 36, 28)
+      setPadding(48, 48, 48, 48)
+      layoutParams = LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT
+      )
     }
 
-    card.addView(labelView(if (payload.spam) "Potential spam" else "Incoming caller", 12f, "#A35F35", true))
+    card.addView(labelView(if (payload.spam) "Potential spam" else "Incoming caller", 14f, "#A35F35", true))
+    card.addView(spacer(12))
+    card.addView(labelView(payload.name, 32f, "#201B17", true))
     card.addView(spacer(8))
-    card.addView(labelView(payload.name, 26f, "#201B17", true))
-    card.addView(spacer(6))
-    card.addView(labelView(payload.phoneNumber, 14f, "#6F665C", false))
+    card.addView(labelView(payload.phoneNumber, 16f, "#6F665C", false))
     card.addView(spacer(4))
-    card.addView(labelView(payload.location, 14f, "#6F665C", false))
-    card.addView(spacer(18))
+    card.addView(labelView(payload.location, 16f, "#6F665C", false))
+    card.addView(spacer(24))
     card.addView(metaRow(payload))
 
-    container.addView(card)
+    contentLayout.addView(card)
+    contentLayout.addView(spacer(64))
+
+    val buttonRow = LinearLayout(this).apply {
+      orientation = LinearLayout.HORIZONTAL
+      gravity = Gravity.CENTER
+      layoutParams = LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT
+      )
+    }
+
+    val declineBtn = createButton("Decline", "#FFEAEA", "#D32F2F") {
+      declineCall()
+    }
+    
+    val answerBtn = createButton("Answer", "#E8F5E9", "#2E7D32") {
+      answerCall()
+    }
+
+    buttonRow.addView(declineBtn)
+    buttonRow.addView(spacerWidth(32))
+    buttonRow.addView(answerBtn)
+
+    contentLayout.addView(buttonRow)
+    contentLayout.addView(spacer(48))
+
+    val closeBtn = createButton("Dismiss Overlay", "#404040", "#FFFFFF") {
+      finish()
+    }
+    contentLayout.addView(closeBtn)
+
+    container.addView(contentLayout)
     setContentView(container)
 
-    Handler(Looper.getMainLooper()).postDelayed({ finish() }, 6500)
+    // Register receiver to auto-close when phone stops ringing
+    val filter = IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      registerReceiver(callStateReceiver, filter, Context.RECEIVER_EXPORTED)
+    } else {
+      registerReceiver(callStateReceiver, filter)
+    }
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    try {
+      unregisterReceiver(callStateReceiver)
+    } catch (e: Exception) {
+      // Ignored
+    }
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun answerCall() {
+    try {
+      val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        telecomManager.acceptRingingCall()
+      }
+      finish()
+    } catch (e: Exception) {
+      e.printStackTrace()
+      finish()
+    }
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun declineCall() {
+    try {
+      val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        telecomManager.endCall()
+      }
+      finish()
+    } catch (e: Exception) {
+      e.printStackTrace()
+      finish()
+    }
+  }
+
+  private fun createButton(text: String, bgColor: String, textColor: String, onClick: () -> Unit): TextView {
+    return TextView(this).apply {
+      this.text = text
+      textSize = 16f
+      setTypeface(typeface, Typeface.BOLD)
+      setTextColor(Color.parseColor(textColor))
+      gravity = Gravity.CENTER
+      background = GradientDrawable().apply {
+        shape = GradientDrawable.RECTANGLE
+        cornerRadius = 100f
+        setColor(Color.parseColor(bgColor))
+      }
+      setPadding(64, 32, 64, 32)
+      setOnClickListener { onClick() }
+    }
   }
 
   private fun metaRow(payload: CallerOverlayPayload): LinearLayout {
@@ -117,15 +247,19 @@ class CallerOverlayActivity : Activity() {
       if (bold) {
         setTypeface(typeface, Typeface.BOLD)
       }
+      gravity = Gravity.CENTER_HORIZONTAL
     }
   }
 
   private fun spacer(height: Int): TextView {
     return TextView(this).apply {
-      layoutParams = LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        height,
-      )
+      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height)
+    }
+  }
+
+  private fun spacerWidth(width: Int): TextView {
+    return TextView(this).apply {
+      layoutParams = LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT)
     }
   }
 

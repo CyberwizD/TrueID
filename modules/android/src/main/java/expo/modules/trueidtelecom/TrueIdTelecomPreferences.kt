@@ -40,4 +40,12 @@ object TrueIdTelecomPreferences {
   fun hasCallLogPermission(context: Context): Boolean {
     return ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
   }
+
+  fun hasAnswerPhoneCallsPermission(context: Context): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      ContextCompat.checkSelfPermission(context, android.Manifest.permission.ANSWER_PHONE_CALLS) == PackageManager.PERMISSION_GRANTED
+    } else {
+      true // Pre-Oreo, we can use older telephony reflection (or it's not strictly required)
+    }
+  }
 }
