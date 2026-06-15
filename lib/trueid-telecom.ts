@@ -8,7 +8,8 @@ export type NativeTelecomStatus = {
   sdkInt?: number;
   apiBaseUrl: string | null;
   backendConfigured: boolean;
-  phoneStatePermissionGranted: boolean;
+  phoneStateGranted: boolean;
+  callLogGranted: boolean;
   canDrawOverlays?: boolean;
   nativeAvailable: boolean;
 };
@@ -64,7 +65,8 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
       sdkInt: undefined,
       apiBaseUrl: null,
       backendConfigured: false,
-      phoneStatePermissionGranted: false,
+      phoneStateGranted: false,
+      callLogGranted: false,
       canDrawOverlays: false,
       nativeAvailable: false,
     };
@@ -77,10 +79,14 @@ export async function requestPhoneStatePermission(): Promise<void> {
   if (Platform.OS !== 'android') {
     return;
   }
-  await PermissionsAndroid.requestMultiple([
-    PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
-    PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
-  ]);
+  await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE);
+}
+
+export async function requestCallLogPermission(): Promise<void> {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+  await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CALL_LOG);
 }
 
 export async function requestOverlayPermission(): Promise<void> {
