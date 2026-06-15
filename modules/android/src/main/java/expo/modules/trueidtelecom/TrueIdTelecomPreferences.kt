@@ -34,8 +34,10 @@ object TrueIdTelecomPreferences {
   }
 
   fun hasPhoneStatePermission(context: Context): Boolean {
-    val phoneState = ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
-    val callLog = ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
-    return phoneState && callLog
+    return ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+  }
+
+  fun hasCallLogPermission(context: Context): Boolean {
+    return ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
   }
 }
