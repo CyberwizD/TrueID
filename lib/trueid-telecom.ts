@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
 import { requireNativeModule } from 'expo';
 
 import { getConfiguredApiBaseUrl, type LookupResponse } from '@/lib/trueid-api';
@@ -8,8 +8,7 @@ export type NativeTelecomStatus = {
   sdkInt?: number;
   apiBaseUrl: string | null;
   backendConfigured: boolean;
-  callScreeningRoleHeld: boolean;
-  callScreeningRoleAvailable?: boolean;
+  phoneStatePermissionGranted: boolean;
   canDrawOverlays?: boolean;
   nativeAvailable: boolean;
 };
@@ -18,7 +17,6 @@ type TrueIdTelecomModuleShape = {
   setApiBaseUrlAsync(apiBaseUrl: string): Promise<void>;
   getStatusAsync(): Promise<NativeTelecomStatus>;
   requestOverlayPermissionAsync(): Promise<void>;
-  openCallScreeningRoleRequestAsync(): Promise<void>;
   showCallerOverlayAsync(
     phoneNumber: string,
     name: string,
@@ -66,8 +64,7 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
       sdkInt: undefined,
       apiBaseUrl: null,
       backendConfigured: false,
-      callScreeningRoleHeld: false,
-      callScreeningRoleAvailable: false,
+      phoneStatePermissionGranted: false,
       canDrawOverlays: false,
       nativeAvailable: false,
     };
@@ -76,13 +73,14 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
   return nativeModule.getStatusAsync();
 }
 
-export async function openCallScreeningRoleRequest(): Promise<void> {
-  const nativeModule = getNativeModule();
-  if (!nativeModule) {
+export async function requestPhoneStatePermission(): Promise<void> {
+  if (Platform.OS !== 'android') {
     return;
   }
-
-  await nativeModule.openCallScreeningRoleRequestAsync();
+  await PermissionsAndroid.requestMultiple([
+    PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+    PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
+  ]);
 }
 
 export async function requestOverlayPermission(): Promise<void> {
