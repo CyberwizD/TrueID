@@ -1,8 +1,9 @@
 package expo.modules.trueidtelecom
 
-import android.app.role.RoleManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 
 object TrueIdTelecomPreferences {
   private const val PREFS_NAME = "trueid_telecom_prefs"
@@ -32,19 +33,9 @@ object TrueIdTelecomPreferences {
       .apply()
   }
 
-  fun hasCallScreeningRole(context: Context): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-      return false
-    }
-    val roleManager = context.getSystemService(RoleManager::class.java)
-    return roleManager?.isRoleHeld(RoleManager.ROLE_CALL_SCREENING) == true
-  }
-
-  fun isCallScreeningRoleAvailable(context: Context): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-      return false
-    }
-    val roleManager = context.getSystemService(RoleManager::class.java)
-    return roleManager?.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING) == true
+  fun hasPhoneStatePermission(context: Context): Boolean {
+    val phoneState = ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+    val callLog = ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+    return phoneState && callLog
   }
 }
