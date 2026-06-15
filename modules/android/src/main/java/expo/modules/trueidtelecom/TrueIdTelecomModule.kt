@@ -1,6 +1,5 @@
 package expo.modules.trueidtelecom
 
-import android.app.role.RoleManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -26,8 +25,7 @@ class TrueIdTelecomModule : Module() {
         "sdkInt" to Build.VERSION.SDK_INT,
         "apiBaseUrl" to TrueIdTelecomPreferences.getApiBaseUrl(context),
         "backendConfigured" to !TrueIdTelecomPreferences.getApiBaseUrl(context).isNullOrBlank(),
-        "callScreeningRoleHeld" to TrueIdTelecomPreferences.hasCallScreeningRole(context),
-        "callScreeningRoleAvailable" to TrueIdTelecomPreferences.isCallScreeningRoleAvailable(context),
+        "phoneStatePermissionGranted" to TrueIdTelecomPreferences.hasPhoneStatePermission(context),
         "canDrawOverlays" to if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true,
         "nativeAvailable" to true,
       )
@@ -44,21 +42,6 @@ class TrueIdTelecomModule : Module() {
           activity.startActivity(intent)
         }
       }
-    }
-
-    AsyncFunction("openCallScreeningRoleRequestAsync") {
-      val activity = appContext.currentActivity ?: throw IllegalStateException("Foreground activity unavailable.")
-
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-        throw IllegalStateException("Call screening role requires Android 10 or newer.")
-      }
-
-      val roleManager = activity.getSystemService(RoleManager::class.java)
-      if (roleManager?.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING) != true) {
-        throw IllegalStateException("Call screening role is not available on this device (possibly restricted by the manufacturer).")
-      }
-      val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
-      activity.startActivity(intent)
     }
 
     AsyncFunction("showCallerOverlayAsync") {
