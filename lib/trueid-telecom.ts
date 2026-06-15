@@ -10,6 +10,7 @@ export type NativeTelecomStatus = {
   backendConfigured: boolean;
   phoneStateGranted: boolean;
   callLogGranted: boolean;
+  answerPhoneCallsGranted: boolean;
   canDrawOverlays?: boolean;
   nativeAvailable: boolean;
 };
@@ -67,6 +68,7 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
       backendConfigured: false,
       phoneStateGranted: false,
       callLogGranted: false,
+      answerPhoneCallsGranted: false,
       canDrawOverlays: false,
       nativeAvailable: false,
     };
@@ -87,6 +89,15 @@ export async function requestCallLogPermission(): Promise<void> {
     return;
   }
   await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CALL_LOG);
+}
+
+export async function requestAnswerPhoneCallsPermission(): Promise<void> {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+  if (Platform.Version >= 26) {
+    await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ANSWER_PHONE_CALLS);
+  }
 }
 
 export async function requestOverlayPermission(): Promise<void> {
