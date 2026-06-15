@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
-import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, View, TextInput } from 'react-native';
 
 import { Reveal } from '@/components/reveal';
 import { ScreenShell } from '@/components/screen-shell';
 import { SectionHeading } from '@/components/section-heading';
 import { Colors, Fonts, Radii } from '@/constants/theme';
 import { fetchApiHealth } from '@/lib/trueid-api';
-import { getNativeTelecomStatus, requestPhoneStatePermission, requestCallLogPermission, requestAnswerPhoneCallsPermission, requestOverlayPermission, type NativeTelecomStatus } from '@/lib/trueid-telecom';
+import { getNativeTelecomStatus, requestPhoneStatePermission, requestCallLogPermission, requestAnswerPhoneCallsPermission, requestOverlayPermission, setUserPhoneNumber, type NativeTelecomStatus } from '@/lib/trueid-telecom';
 
 export default function SettingsScreen() {
   const [nativeStatus, setNativeStatus] = useState<NativeTelecomStatus | null>(null);
   const [backendStatus, setBackendStatus] = useState<'online' | 'offline'>('offline');
   const [error, setError] = useState<string | null>(null);
+  const [phoneNumberInput, setPhoneNumberInput] = useState('');
 
   async function refresh() {
     setError(null);
@@ -22,6 +23,9 @@ export default function SettingsScreen() {
       ]);
       setNativeStatus(telecomStatus);
       setBackendStatus(health?.status === 'ok' ? 'online' : 'offline');
+      if (telecomStatus?.userPhoneNumber) {
+        setPhoneNumberInput(telecomStatus.userPhoneNumber);
+      }
     } catch (refreshError) {
       setError(refreshError instanceof Error ? refreshError.message : 'Could not refresh app status.');
     }
@@ -76,6 +80,18 @@ export default function SettingsScreen() {
       await refresh();
     } catch (overlayError) {
       setError(overlayError instanceof Error ? overlayError.message : 'Overlay request failed.');
+    }
+  }
+
+  async function handleSavePhoneNumber() {
+    if (!phoneNumberInput.trim()) {
+      return;
+    }
+    try {
+      await setUserPhoneNumber(phoneNumberInput.trim());
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save phone number');
     }
   }
 
@@ -145,6 +161,22 @@ export default function SettingsScreen() {
         ) : null}
         <Pressable style={styles.secondaryButton} onPress={() => void refresh()}>
           <Text style={styles.secondaryButtonText}>Refresh status</Text>
+        </Pressable>
+      </Reveal>
+
+      <Reveal delay={120} style={styles.panel}>
+        <Text style={styles.panelTitle}>Your Phone Number</Text>
+        <Text style={styles.copy}>Enter your phone number so the admin dashboard can correctly track who was called.</Text>
+        <TextInput
+          style={styles.textInput}
+          value={phoneNumberInput}
+          onChangeText={setPhoneNumberInput}
+          placeholder="+234..."
+          placeholderTextColor={Colors.light.muted}
+          keyboardType="phone-pad"
+        />
+        <Pressable style={styles.secondaryButton} onPress={() => void handleSavePhoneNumber()}>
+          <Text style={styles.secondaryButtonText}>Save Number</Text>
         </Pressable>
       </Reveal>
 
@@ -238,5 +270,14 @@ const styles = StyleSheet.create({
     color: Colors.light.danger,
     fontFamily: Fonts.body,
     fontSize: 13,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+    borderRadius: Radii.md,
+    padding: 12,
+    color: Colors.light.text,
+    fontFamily: Fonts.body,
+    fontSize: 16,
   },
 });
