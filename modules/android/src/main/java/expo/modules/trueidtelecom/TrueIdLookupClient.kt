@@ -29,7 +29,12 @@ object TrueIdLookupClient {
     }
 
     return try {
-      val body = JSONObject().put("phone_number", phoneNumber).toString()
+      val requesterId = TrueIdTelecomPreferences.getUserPhoneNumber(context)
+      val json = JSONObject().put("phone_number", phoneNumber)
+      if (!requesterId.isNullOrBlank()) {
+        json.put("requester_id", requesterId)
+      }
+      val body = json.toString()
       OutputStreamWriter(connection.outputStream, Charsets.UTF_8).use { writer ->
         writer.write(body)
       }

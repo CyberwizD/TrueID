@@ -18,12 +18,18 @@ class TrueIdTelecomModule : Module() {
       TrueIdTelecomPreferences.setApiBaseUrl(context, apiBaseUrl)
     }
 
+    AsyncFunction("setUserPhoneNumberAsync") { number: String ->
+      val context = appContext.reactContext ?: throw IllegalStateException("React context unavailable.")
+      TrueIdTelecomPreferences.setUserPhoneNumber(context, number)
+    }
+
     AsyncFunction("getStatusAsync") {
       val context = appContext.reactContext ?: throw IllegalStateException("React context unavailable.")
       mapOf(
         "platform" to "android",
         "sdkInt" to Build.VERSION.SDK_INT,
         "apiBaseUrl" to TrueIdTelecomPreferences.getApiBaseUrl(context),
+        "userPhoneNumber" to TrueIdTelecomPreferences.getUserPhoneNumber(context),
         "backendConfigured" to !TrueIdTelecomPreferences.getApiBaseUrl(context).isNullOrBlank(),
         "phoneStateGranted" to TrueIdTelecomPreferences.hasPhoneStatePermission(context),
         "callLogGranted" to TrueIdTelecomPreferences.hasCallLogPermission(context),

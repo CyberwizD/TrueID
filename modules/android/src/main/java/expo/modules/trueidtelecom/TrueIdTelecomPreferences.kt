@@ -6,32 +6,40 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 
 object TrueIdTelecomPreferences {
-  private const val PREFS_NAME = "trueid_telecom_prefs"
-  private const val API_BASE_URL_KEY = "api_base_url"
+  private const val PREFS_NAME = "TrueIdTelecomPreferences"
+  private const val KEY_API_BASE_URL = "api_base_url"
+  private const val KEY_USER_PHONE_NUMBER = "user_phone_number"
   private const val META_DATA_API_BASE_URL = "expo.modules.trueidtelecom.API_BASE_URL"
 
   fun getApiBaseUrl(context: Context): String? {
-    val sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    val overridden = sharedPrefs.getString(API_BASE_URL_KEY, null)
-    if (!overridden.isNullOrBlank()) {
-      return overridden
-    }
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getString(KEY_API_BASE_URL, null) ?: getManifestApiBaseUrl(context)
+  }
 
+  fun setApiBaseUrl(context: Context, url: String?) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putString(KEY_API_BASE_URL, url?.trim()?.trimEnd('/')).apply()
+  }
+
+  fun getUserPhoneNumber(context: Context): String? {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getString(KEY_USER_PHONE_NUMBER, null)
+  }
+
+  fun setUserPhoneNumber(context: Context, number: String?) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putString(KEY_USER_PHONE_NUMBER, number).apply()
+  }
+
+  private fun getManifestApiBaseUrl(context: Context): String? {
     return try {
-      val appInfo = context.packageManager.getApplicationInfo(context.packageName, android.content.pm.PackageManager.GET_META_DATA)
+      val appInfo = context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
       appInfo.metaData?.getString(META_DATA_API_BASE_URL)
     } catch (_: Exception) {
       null
     }
   }
 
-  fun setApiBaseUrl(context: Context, apiBaseUrl: String) {
-    context
-      .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-      .edit()
-      .putString(API_BASE_URL_KEY, apiBaseUrl.trim().trimEnd('/'))
-      .apply()
-  }
 
   fun hasPhoneStatePermission(context: Context): Boolean {
     return ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
