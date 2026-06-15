@@ -1,0 +1,12 @@
+{
+  "name": "trueid-telecom",
+  "version": "1.0.0",
+  "description": "Local expo module for TrueID",
+  "main": "index.ts",
+  "dependencies": {},
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}
