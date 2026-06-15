@@ -1,6 +1,6 @@
 const { withAndroidManifest } = require('expo/config-plugins');
 
-const SERVICE_NAME = 'expo.modules.trueidtelecom.TrueIdCallScreeningService';
+const RECEIVER_NAME = 'expo.modules.trueidtelecom.PhoneStateReceiver';
 const ACTIVITY_NAME = 'expo.modules.trueidtelecom.CallerOverlayActivity';
 const META_DATA_NAME = 'expo.modules.trueidtelecom.API_BASE_URL';
 
@@ -31,21 +31,20 @@ function ensureMetaData(application, name, value) {
   });
 }
 
-function ensureService(application) {
-  application.service = application.service || [];
-  const existing = application.service.find((service) => service.$['android:name'] === SERVICE_NAME);
+function ensureReceiver(application) {
+  application.receiver = application.receiver || [];
+  const existing = application.receiver.find((receiver) => receiver.$['android:name'] === RECEIVER_NAME);
   if (existing) {
     return;
   }
-  application.service.push({
+  application.receiver.push({
     $: {
-      'android:name': SERVICE_NAME,
-      'android:permission': 'android.permission.BIND_SCREENING_SERVICE',
+      'android:name': RECEIVER_NAME,
       'android:exported': 'true',
     },
     'intent-filter': [
       {
-        action: [{ $: { 'android:name': 'android.telecom.CallScreeningService' } }],
+        action: [{ $: { 'android:name': 'android.intent.action.PHONE_STATE' } }],
       },
     ],
   });
@@ -81,7 +80,9 @@ module.exports = function withTrueIdAndroid(config, { apiBaseUrl } = {}) {
 
     ensurePermission(manifest, 'android.permission.INTERNET');
     ensurePermission(manifest, 'android.permission.READ_CONTACTS');
-    ensureService(application);
+    ensurePermission(manifest, 'android.permission.READ_PHONE_STATE');
+    ensurePermission(manifest, 'android.permission.READ_CALL_LOG');
+    ensureReceiver(application);
     ensureActivity(application);
     ensureMetaData(application, META_DATA_NAME, apiBaseUrl || '');
 
