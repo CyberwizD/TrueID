@@ -13,10 +13,12 @@ export type NativeTelecomStatus = {
   answerPhoneCallsGranted: boolean;
   canDrawOverlays?: boolean;
   nativeAvailable: boolean;
+  userPhoneNumber?: string;
 };
 
 type TrueIdTelecomModuleShape = {
   setApiBaseUrlAsync(apiBaseUrl: string): Promise<void>;
+  setUserPhoneNumberAsync(number: string): Promise<void>;
   getStatusAsync(): Promise<NativeTelecomStatus>;
   requestOverlayPermissionAsync(): Promise<void>;
   showCallerOverlayAsync(
@@ -71,6 +73,7 @@ export async function getNativeTelecomStatus(): Promise<NativeTelecomStatus> {
       answerPhoneCallsGranted: false,
       canDrawOverlays: false,
       nativeAvailable: false,
+      userPhoneNumber: undefined,
     };
   }
 
@@ -123,4 +126,12 @@ export async function previewNativeOverlay(result: LookupResponse): Promise<void
     result.confidence,
     result.spam_score,
   );
+}
+
+export async function setUserPhoneNumber(number: string): Promise<void> {
+  const nativeModule = getNativeModule();
+  if (!nativeModule) {
+    return;
+  }
+  await nativeModule.setUserPhoneNumberAsync(number);
 }
