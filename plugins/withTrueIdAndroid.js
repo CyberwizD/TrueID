@@ -82,6 +82,7 @@ module.exports = function withTrueIdAndroid(config, { apiBaseUrl } = {}) {
     ensurePermission(manifest, 'android.permission.READ_CONTACTS');
     ensurePermission(manifest, 'android.permission.READ_PHONE_STATE');
     ensurePermission(manifest, 'android.permission.READ_CALL_LOG');
+    ensurePermission(manifest, 'android.permission.ANSWER_PHONE_CALLS');
     ensureReceiver(application);
     ensureActivity(application);
     ensureMetaData(application, META_DATA_NAME, apiBaseUrl || '');
