@@ -21,8 +21,8 @@ object TrueIdLookupClient {
     val endpoint = buildLookupUrl(baseUrl)
     val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
       requestMethod = "POST"
-      connectTimeout = 1500
-      readTimeout = 2000
+      connectTimeout = 3000
+      readTimeout = 4000
       doInput = true
       doOutput = true
       setRequestProperty("Content-Type", "application/json")
