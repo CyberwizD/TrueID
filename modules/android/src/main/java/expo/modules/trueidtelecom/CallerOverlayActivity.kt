@@ -65,12 +65,12 @@ class CallerOverlayActivity : Activity() {
     }
 
     val container = FrameLayout(this).apply {
-      setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent black background
+      setBackgroundColor(Color.parseColor("#F9F5F0")) // Solid background
       layoutParams = FrameLayout.LayoutParams(
         FrameLayout.LayoutParams.MATCH_PARENT,
         FrameLayout.LayoutParams.MATCH_PARENT,
       )
-      setPadding(24, 120, 24, 120)
+      setPadding(0, 0, 0, 0)
     }
 
     val contentLayout = LinearLayout(this).apply {
@@ -92,8 +92,8 @@ class CallerOverlayActivity : Activity() {
         setColor(Color.parseColor("#FBF7F0"))
         setStroke(2, Color.parseColor("#D7CCBD"))
       }
-      elevation = 16f
-      setPadding(48, 48, 48, 48)
+      elevation = 0f
+      setPadding(48, 120, 48, 48)
       layoutParams = LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -137,7 +137,7 @@ class CallerOverlayActivity : Activity() {
     contentLayout.addView(buttonRow)
     contentLayout.addView(spacer(48))
 
-    val closeBtn = createButton("Dismiss Overlay", "#404040", "#FFFFFF") {
+    val closeBtn = createButton("Cancel", "#FFEAEA", "#D32F2F") {
       finish()
     }
     contentLayout.addView(closeBtn)
