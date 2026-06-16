@@ -17,5 +17,9 @@ export function normalizePhoneNumber(input: string): string {
     return `+${digits.slice(2)}`;
   }
 
+  if (digits.length === 10) {
+    return `+234${digits}`;
+  }
+
   return `+${digits}`;
 }
